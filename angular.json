@@ -124,5 +124,8 @@
       }
     }
   },
-  "defaultProject": "angular-crud-product"
+  "defaultProject": "angular-crud-product",
+  "cli": {
+    "analytics": false
+  }
 }
