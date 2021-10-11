@@ -1,32 +1,67 @@
-<button type="button" class="btn btn-primary" (click)="open(content)">
-  Add New Product
-</button>
+<div style="position: absolute; right: 0; top: 0">
+  <ngb-toast
+    *ngIf="isToastShown"
+    [autohide]="true"
+    [delay]="3000"
+    header="Notification"
+    (hidden)="isToastShown = false"
+  >
+    {{ error || "Operation has been done!" }}
+  </ngb-toast>
+</div>
 
-<table class="table" style="max-width: 900px">
-  <thead>
-    <tr>
-      <th scope="col">ID</th>
-      <th scope="col">Product Name</th>
-      <th scope="col">Price ($)</th>
-      <th scope="col">Created Date</th>
-      <th scope="col">Modified Date</th>
-      <th scope="col">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Book</td>
-      <td>1000</td>
-      <td>20-05-21</td>
-      <td>25-05-21</td>
-      <td>
-        <button type="button" class="btn btn-primary mr-2">Update</button
-        ><button type="button" class="btn btn-danger">Delete</button>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<div class="loading" *ngIf="!(isLoading | async)">Loading&#8230;</div>
+
+<div style="padding: 20px">
+  <button
+    type="button"
+    class="btn btn-primary mb-2"
+    (click)="openModalForCreate(content)"
+  >
+    Add New Product
+  </button>
+
+  <table class="table" style="max-width: 1100px">
+    <thead>
+      <tr>
+        <th scope="col">Product Name</th>
+        <th scope="col">Country</th>
+        <th scope="col">Price ($)</th>
+        <th scope="col">in Stock</th>
+        <th scope="col">Created Date</th>
+        <th scope="col">Modified Date</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let i of products | async">
+        <td>{{ i.name }}</td>
+        <td>{{ i.madeInCountry }}</td>
+        <td>{{ i.price }}</td>
+        <td>
+          {{ i.isInStock ? "YES" : "NO" }}
+        </td>
+        <td>{{ i.createdDate | date: "dd-MM-yyyy HH:mm:ss" }}</td>
+        <td>{{ i.modifiedDate | date: "dd-MM-yyyy HH:mm:ss" }}</td>
+        <td>
+          <button
+            type="button"
+            class="btn btn-primary mr-2"
+            (click)="openModalForUpdate(content, i)"
+          >
+            Update</button
+          ><button
+            type="button"
+            class="btn btn-danger"
+            (click)="deleteProduct(i.id)"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <ng-template #content let-modal>
   <div class="modal-header">
@@ -35,23 +70,77 @@
       type="button"
       class="close"
       aria-label="Close"
-      (click)="modal.dismiss('Cross click')"
+      (click)="closeModal()"
     >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
   <div class="modal-body">
-    <form>
+    <form [formGroup]="productForm">
       <div class="mb-3">
         <label for="name" class="form-label">Product Name:</label>
-        <input type="text" class="form-control" id="name" />
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          formControlName="name"
+          [ngClass]="{
+            'is-invalid': !name.valid && name.touched
+          }"
+        />
+        <div class="invalid-feedback" *ngIf="name.errors?.required">
+          Product Name is required.
+        </div>
+        <div class="invalid-feedback" *ngIf="name.errors?.minlength">
+          Product Name minimum length is 2 symbols.
+        </div>
+        <div class="invalid-feedback" *ngIf="name.errors?.maxlength">
+          Product Name maximum length is 40 symbols.
+        </div>
       </div>
       <div class="mb-3">
         <label for="price" class="form-label">Price:</label>
-        <input type="number" class="form-control" id="price" />
+        <input
+          type="number"
+          class="form-control"
+          id="price"
+          formControlName="price"
+          [ngClass]="{
+            'is-invalid': !price.valid && price.touched
+          }"
+        />
+        <div class="invalid-feedback" *ngIf="name.errors?.required">
+          Price is required.
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="madeInCountry" class="form-label">Made in Country:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="madeInCountry"
+          formControlName="madeInCountry"
+          [ngClass]="{
+            'is-invalid': !madeInCountry.valid && madeInCountry.touched
+          }"
+        />
+        <div class="invalid-feedback" *ngIf="name.errors?.required">
+          Made in Country is required.
+        </div>
+        <div class="invalid-feedback" *ngIf="name.errors?.minlength">
+          Made in Country minimum length is 2 symbols.
+        </div>
+        <div class="invalid-feedback" *ngIf="name.errors?.maxlength">
+          Made in Country maximum length is 40 symbols.
+        </div>
       </div>
       <div class="mb-3 form-check">
-        <input type="checkbox" class="form-check-input" id="isInStock" />
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="isInStock"
+          formControlName="isInStock"
+        />
         <label class="form-check-label" for="isInStock"
           >Available in stock</label
         >
@@ -62,7 +151,8 @@
     <button
       type="button"
       class="btn btn-primary"
-      (click)="modal.close('Save click')"
+      [disabled]="productForm.invalid"
+      (click)="saveClick()"
     >
       Save
     </button>

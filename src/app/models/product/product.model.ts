@@ -1,8 +1,8 @@
 export interface Product {
   id: number;
   name: string;
-  madeInCounty: string;
-  price: Date;
+  madeInCountry: string;
+  price: number;
   isInStock: boolean;
   createdDate: Date;
   modifiedDate: Date | null;
